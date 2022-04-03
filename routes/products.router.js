@@ -1,65 +1,96 @@
-const faker = require('faker');
 const express = require('express');
-
+const ProductServices = require('./../services/product.service')
 const router = express.Router();
+const productService = new ProductServices()
+
+const {validatorHandler} = require("./../middlewares/validator.handler")
+const {createProductSchema,getProductSchema,updateProductSchema} = require("./../schemas/product.schema")
 
 router.get("/filter", (req, res) => {
   res.json(
     {
-      d:1
+      d: 1
     }
   );
 });
 
-router.get("/", (req, res) => {
-  const products = [];
-  for (let index = 0; index < 100; index++) {
-    products.push(
+router.get("/",
+async (req, res) => {
+  try {
+    const products = await productService.all()
+    res.json(
+      products
+    );
+  } catch (error) {
+    res.status(404).json(
       {
-        name: faker.commerce.productName(),
-        price: parseInt(faker.commerce.price(), 10),
-        image: faker.image.imageUrl()
+        message: error.message
       }
     )
   }
-  res.json(
-    products
-  );
 });
 
-router.post("/", (req, res) => {
+router.post("/",
+validatorHandler(createProductSchema,"body"),
+async (req, res) => {
   const body = req.body
-  res.json(
+  const newProduct = await productService.create(body)
+  res.status(201).json(
     {
       message: 'created',
-      data: body
+      data: newProduct
     }
   );
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id",
+validatorHandler(getProductSchema,"params"),
+validatorHandler(updateProductSchema,"body"),
+async (req, res) => {
+  const { id } = req.params;
   const body = req.body
+  const product = await productService.update(id, body)
   res.json(
     {
       message: 'updated',
+      data: product
+    }
+  );
+});
+
+router.patch("/:id",
+validatorHandler(getProductSchema,"params"),
+validatorHandler(updateProductSchema,"body"),
+async (req, res) => {
+  const body = req.body
+  res.json(
+    {
+      message: 'updated partial',
       data: body
     }
   );
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id",
+validatorHandler(getProductSchema,"params"),
+async (req, res) => {
+  const { id } = req.params;
+  const { message } = await productService.delete(id)
   res.status(204).send();
 });
 
-router.get("/:id", (req, res) => {
-  const { id } = req.params;
+router.get("/:id",
+validatorHandler(getProductSchema,"params"),
+async (req, res, next) => {
+  try {
+    const { id } = req.params;
+  const product = await productService.find(id)
   res.json(
-    {
-      id,
-      name: 'Product A',
-      price: 1000
-    }
+    product
   );
+  } catch (error) {
+    next(error)
+  }
 });
 
 module.exports = router
