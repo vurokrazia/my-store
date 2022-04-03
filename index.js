@@ -8,7 +8,7 @@ const port = 3000;
 const whitelist = ['http://locahost:8080', "https://myapp.co"];
 const options = {
   origin: (origin, callback) => {
-    if(whitelist.includes(origin))
+    if(whitelist.includes(origin) || !origin)
     callback(null,true)
 else
 callback(new Error('nope'))
