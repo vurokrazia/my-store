@@ -15,7 +15,7 @@ callback(new Error('nope'))
   }
 }
 
-app.use(cors(options))
+// app.use(cors(options))
 
 const { errorHandler,logErrors , boomErrorHandler} = require('./middlewares/error.handler')
 

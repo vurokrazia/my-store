@@ -1,9 +1,13 @@
 const boom = require('@hapi/boom');
 const faker = require('faker');
+const { getConnection } = require('../libs/postgresq');
+const { pool } = require('./../libs/postgres.pool')
 class ProductServices {
   constructor() {
     this.products = []
     this.generate()
+    this.pool = pool
+    this.pool.on('error', () => console.log)
   }
   generate() {
     this.products.push(
@@ -33,18 +37,20 @@ class ProductServices {
       name,
       price,
       image,
-      isBlock:  faker.datatype.boolean()
+      isBlock: faker.datatype.boolean()
     }
     this.products.push(newProduct)
     return newProduct
   }
   async find(id) {
-    const product = this.products.find(item => item.id === id)
-    if (!product)
-      throw boom.notFound('product not found');
-    if (product.isBlock)
-      throw boom.conflict('product not found');
-    return product
+    const query = 'select * from tasks'
+    const rta = await this.pool.query(query)
+    return rta.rows
+    // const product = this.products.find(item => item.id === id)
+    // if (rta.rows.size == 0 )
+    //   throw boom.notFound('product not found');
+    // if (product.isBlock)
+    //   throw boom.conflict('product not found');
   }
   async all() {
     return this.products
